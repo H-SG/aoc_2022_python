@@ -19,3 +19,10 @@ I think this could go quicker with nested matching, but since there are only 9 p
 
 ## Day 3
 String manipulations for dayz, honestly I don't do much string manipulation day to day, but using intersection in sets is something novel for me.
+
+## Day 4
+I'm actually kinda on time, but wasted an inordinate ammount of time dickering about with badly formed if loops and resulting bad answers.
+
+Brain not work good early.
+
+One could do it just with sets and length comparisons.

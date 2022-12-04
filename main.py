@@ -1,6 +1,9 @@
 def read_to_array(path: str) -> list[str]:
     with open(path) as f:
-        return f.readlines()
+        lines: list[str] = f.readlines()
+
+    # let's always clean up
+    return [x.strip() for x in lines]
 
 def day_1() -> None:
     # i'm certain there is a more efficient way of doing this, but
@@ -117,7 +120,46 @@ def day_3() -> None:
 
     print(f"Sum of priorities for the badges are {sum(badges_priority)}")
 
+def day_4() -> None:
+    # get the assignments
+    assignments: list[str] = read_to_array('data/day4.txt')
+
+    # split into elves
+    first_elf: list[list[str]] = [x.split(',')[0].split("-") for x in assignments]
+    second_elf: list[list[str]] = [x.split(',')[1].split("-") for x in assignments]
+
+    # our counters
+    subsets: int = 0
+    overlapping: int = 0
+
+    # loop time
+    for fe, se in zip(first_elf, second_elf):
+        # make ints
+        fe_i: list[int] = [int(x) for x in fe]
+        se_i: list[int] = [int(x) for x in se]
+
+        # sanity check while i failed to get the right answer
+        assert fe_i[1] - fe_i[0] >= 0
+        assert se_i[1] - se_i[0] >= 0
+
+        # did this with nested ifs first, nasty, brutish
+        if (fe_i[0] >= se_i[0]) and (fe_i[1] <= se_i[1]):
+            subsets += 1
+        elif (se_i[0] >= fe_i[0]) and (se_i[1] <= fe_i[1]):
+            subsets += 1
+
+        # using sets a lot, get those intersections
+        fe_areas: set[int] = set(range(fe_i[0], fe_i[1] + 1))
+        se_areas: set[int] = set(range(se_i[0], se_i[1] + 1))
+
+        if len(fe_areas.intersection(se_areas)) > 0:
+            overlapping += 1
+
+    print(f"Number of overlapping rosters are {subsets}")
+    print(f"Number of overlapped assignments are {overlapping}")
+
 if __name__ == "__main__":
     day_1()
     day_2()
     day_3()
+    day_4()
