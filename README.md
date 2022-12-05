@@ -26,3 +26,8 @@ I'm actually kinda on time, but wasted an inordinate ammount of time dickering a
 Brain not work good early.
 
 One could do it just with sets and length comparisons.
+
+## Day 5
+Stacks! Transpotitions! Stacks suddenly lists!
+
+I enjoyed this quite a bit, because going from part 1 to part 2 involved removing a single wrapping function on a single line.
