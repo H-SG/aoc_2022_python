@@ -273,6 +273,29 @@ def day_5_part_2() -> None:
 
     print(f'The top of crates string for part 2 is {end_string}')
 
+def day_6() -> None:
+    # our input is one long string
+    stream: str = read_to_array('data/day6.txt')[0]
+
+    # a nice little function  which does the things
+    def first_unique_substring(stream: str, substring_len: int) -> int:
+        for i in range(0, len(stream)):
+            substring: str = stream[i:i+substring_len]
+
+            substring_chars: list[str] = [x for x in substring]
+
+            # sets babey
+            if len(set(substring_chars)) == substring_len:
+                return i + substring_len
+        else:
+            raise ValueError
+
+    part_1_index: int = first_unique_substring(stream, 4)
+    part_2_index: int = first_unique_substring(stream, 14)
+
+    print(f"The first start of packet marker is at {part_1_index}")
+    print(f"The first start of message marker is at {part_2_index}")
+
 if __name__ == "__main__":
     day_1()
     day_2()
@@ -280,3 +303,4 @@ if __name__ == "__main__":
     day_4()
     day_5_part_1()
     day_5_part_2()
+    day_6()

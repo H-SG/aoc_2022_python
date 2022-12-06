@@ -31,3 +31,6 @@ One could do it just with sets and length comparisons.
 Stacks! Transpotitions! Stacks suddenly lists!
 
 I enjoyed this quite a bit, because going from part 1 to part 2 involved removing a single wrapping function on a single line.
+
+## Day 6
+Nice and quick one, but my colleagues are quicker 😡.
