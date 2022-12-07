@@ -34,3 +34,6 @@ I enjoyed this quite a bit, because going from part 1 to part 2 involved removin
 
 ## Day 6
 Nice and quick one, but my colleagues are quicker 😡.
+
+## Day 7
+Time for some data structures, something which I am not formally familiar with, I think this might be the first tree/graph thing I've made in ages. I escaped the recursion maelstrom by benefit that it is not needed here.

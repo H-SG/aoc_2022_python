@@ -296,6 +296,92 @@ def day_6() -> None:
     print(f"The first start of packet marker is at {part_1_index}")
     print(f"The first start of message marker is at {part_2_index}")
 
+# this class is for day 7
+class Directory:
+    # some of these properties are likely redundant, but just in case...
+    def __init__(self, path):
+        self.path = path
+        self.files = []
+        self.dirs = []
+        self.file_sizes = {}
+        self.parent = None
+        self.children = {}
+        self.parsed = False
+        self.size = 0
+        self.files_only_size = 0
+
+def day_7() -> None:
+    # get all the terminal history
+    commands: list[str] = read_to_array('data/day7.txt')
+
+    # the start of our solution outputs
+    sub_100000_sum: int = 0
+    dir_size_dict: dict[str, int] = {}
+
+    # since the commands causally linked, we can just step through them and build a directory tree
+    current_path: str = None
+    current_dir: Directory = None
+    root_dir: Directory = None
+    for command in commands:
+        match command.split(" "):
+            # if we move up, we are 100% done with the folder
+            case ["$", "cd", ".."]:
+                dir_size_dict[current_path] = current_dir.size
+                current_path = f'{"/".join(current_path.split("/")[:-2])}/'
+                current_dir.parsed = True
+                current_dir.parent.size += current_dir.size
+                if current_dir.size <= 100000:
+                    sub_100000_sum += current_dir.size
+                current_dir = current_dir.parent
+            # if we go into a new folder, we have to create it in the tree/graph
+            case ["$", "cd", folder]:
+                # special case for creating root tree
+                if current_path is not None:
+                    current_path += f"{folder}/"
+                    current_dir.children[current_path] = Directory(current_path)
+                    current_dir.children[current_path].parent = current_dir
+                    current_dir = current_dir.children[current_path]
+                else:
+                    current_path = folder
+                    root_dir = Directory(current_path)
+                    current_dir = root_dir
+            # we do nothing when files are listed
+            case ["$", "ls"]:
+                pass
+            # add it to the list, we'll get to it
+            case ["dir", folder]:
+                current_dir.dirs.append(folder)
+            # get all the sizes!
+            case [size, file]:
+                current_dir.files.append(file)
+                current_dir.file_sizes[file] = int(size)
+                current_dir.size += int(size)
+                current_dir.files_only_size += int(size)
+
+    # the commands don't traverse back to root, so the last folder path won't have sizes
+    # summed back to root, this is a copy of the case ["$", "cd", ".."], best practice
+    # would've been to refactor this out to a function in case of errors, but lazy
+    while (current_path != '/'):
+        dir_size_dict[current_path] = current_dir.size
+        current_path = f'{"/".join(current_path.split("/")[:-2])}/'
+        current_dir.parsed = True
+        current_dir.parent.size += current_dir.size
+        if current_dir.size <= 100000:
+                    sub_100000_sum += current_dir.size
+        current_dir = current_dir.parent
+
+    print(f"The sum size of all folders smaller than 100000 is {sub_100000_sum}")
+
+    # all magic numbers courtesy of the elves
+    free_space: int = 70000000 - root_dir.size
+    space_needed: int = 30000000 - free_space
+
+    # i guess this is unneeded, could just store the sizes
+    deletion_candidates: dict[str, int] = {k:v for k, v in dir_size_dict.items() if v >= space_needed}
+    sorted_delection_candidates: dict[str, int] = dict(sorted(deletion_candidates.items(), key=lambda item: item[1]))
+    
+    print(f"The smallest directory to be deleted is {list(sorted_delection_candidates.keys())[0]} with size {list(sorted_delection_candidates.values())[0]}")
+
 if __name__ == "__main__":
     day_1()
     day_2()
@@ -304,3 +390,4 @@ if __name__ == "__main__":
     day_5_part_1()
     day_5_part_2()
     day_6()
+    day_7()
