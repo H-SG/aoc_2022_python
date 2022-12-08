@@ -382,6 +382,63 @@ def day_7() -> None:
     
     print(f"The smallest directory to be deleted is {list(sorted_delection_candidates.keys())[0]} with size {list(sorted_delection_candidates.values())[0]}")
 
+def day_8():
+    # our trees
+    tree_map: list[str] = read_to_array('data/day8.txt')
+
+    # the scope of our map
+    cols: int = len(tree_map[0])
+    rows: int = len(tree_map)
+    best_tree_score: int = None
+
+    # make a map of trees that are visible
+    visible_tree_map: list[list[bool]] = [[False for _ in range(cols)] for _ in range(rows)]
+
+    # not sure if I could handle this in the next loop, but let's just make the edges visble
+    for i in range(cols):
+        if (i == 0) or (i == cols - 1):
+            visible_tree_map[i] = [True for _ in range(rows)]
+
+        visible_tree_map[i][0] = True
+        visible_tree_map[i][-1] = True
+
+    # check each tree for visibility
+    for x in range(1, cols - 1):
+        for y in range(1, rows - 1):
+            current_tree_value: int = int(tree_map[y][x])
+
+            # some of these reversed lists are a key tool which will help us later ;)
+            left_to_right: list[int] = list(reversed([int(c) for c in tree_map[y][:x + 1]]))
+            right_to_left: list[int] = [int(c) for c in tree_map[y][x:]]
+            top_to_bottom: list[int] = list(reversed([int(r[x]) for r in tree_map[:y + 1]]))
+            bottom_to_top: list[int] = [int(r[x]) for r in tree_map[y:]]
+
+            # check if the tree is visible and calculate it's view score
+            viewing_sub_score = 1
+            for check_direction in [left_to_right, right_to_left, top_to_bottom, bottom_to_top]:
+                if all([current_tree_value > c for c in check_direction[1:]]):
+                    visible_tree_map[y][x] = True
+
+                
+                for i, tree in enumerate(check_direction[1:]):
+                    if tree >= current_tree_value:
+                        viewing_sub_score *= i + 1
+                        break
+                else:
+                    viewing_sub_score *= len(check_direction[1:])
+
+            # check if we have a new winrar
+            if best_tree_score is None:
+                best_tree_score = viewing_sub_score
+            else:
+                best_tree_score = max(best_tree_score, viewing_sub_score)
+
+    # count the number of visible trees
+    visible_trees = sum([sum(x) for x in visible_tree_map])
+
+    print(f'The number of visible trees are {visible_trees}')
+    print(f'The tree with the best score has a score of {best_tree_score}')
+
 if __name__ == "__main__":
     day_1()
     day_2()
@@ -391,3 +448,4 @@ if __name__ == "__main__":
     day_5_part_2()
     day_6()
     day_7()
+    day_8()

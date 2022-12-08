@@ -37,3 +37,8 @@ Nice and quick one, but my colleagues are quicker 😡.
 
 ## Day 7
 Time for some data structures, something which I am not formally familiar with, I think this might be the first tree/graph thing I've made in ages. I escaped the recursion maelstrom by benefit that it is not needed here.
+
+## Day 8
+I thought this was going to be easy, and it almost was if only I didn't swap an x and y around on one line!
+
+I feel like there must be a neat trick to solving this most quickly, but it eludes me.
