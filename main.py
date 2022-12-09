@@ -24,8 +24,8 @@ def day_1() -> None:
                 calory_list[-1] += int(line)
 
     calory_list.sort()
-    print(f"The elf carrying the most calories is carrying {calory_list[-1]} calories")
-    print(f"The three elves carrying the most calories are carrying {sum(calory_list[-3:])} calories")
+    print(f"Day 1.1: The elf carrying the most calories is carrying {calory_list[-1]} calories")
+    print(f"Day 1.2: The three elves carrying the most calories are carrying {sum(calory_list[-3:])} calories")
 
 def day_2() -> None:
     # open sesame
@@ -84,8 +84,8 @@ def day_2() -> None:
         score_1 += rps_score_1(line.strip("\n"))
         score_2 += rps_score_2(line.strip("\n"))
 
-    print(f"The score when following the assumed strategy guide is {score_1}")
-    print(f"The score when following the true strategy guide is {score_2}")
+    print(f"Day 2.1: The score when following the assumed strategy guide is {score_1}")
+    print(f"Day 2.2: The score when following the true strategy guide is {score_2}")
 
 def day_3() -> None:
     # three days, three challenges, all needing things in an array
@@ -110,7 +110,7 @@ def day_3() -> None:
     # some tricks with ascii
     common_items_priority: list[int] = [x - 96 if x > 91 else x - 38 for x in common_items]
 
-    print(f"Sum of priorities in common item types is {sum(common_items_priority)}")
+    print(f"Day 3.1: Sum of priorities in common item types is {sum(common_items_priority)}")
     
     # strings to kinda chars
     rucksacks_items: list[list[str]] = [[y for y in x] for x in rucksacks]
@@ -124,7 +124,7 @@ def day_3() -> None:
     # moar ascii schenaningans
     badges_priority: list[int] = [ord(x) - 96 if ord(x) > 91 else ord(x) - 38 for x in badges]
 
-    print(f"Sum of priorities for the badges are {sum(badges_priority)}")
+    print(f"Day 3.2: Sum of priorities for the badges are {sum(badges_priority)}")
 
 def day_4() -> None:
     # get the assignments
@@ -162,8 +162,8 @@ def day_4() -> None:
         if len(fe_areas.intersection(se_areas)) > 0:
             overlapping += 1
 
-    print(f"Number of overlapping rosters are {subsets}")
-    print(f"Number of overlapped assignments are {overlapping}")
+    print(f"Day 4.1: Number of overlapping rosters are {subsets}")
+    print(f"Day 4.2: Number of overlapped assignments are {overlapping}")
 
 def day_5_part_1() -> None:
     # get our inputs
@@ -200,7 +200,7 @@ def day_5_part_1() -> None:
                 t_stacks[j].append(col[1])
 
     # need to flip around the stacks to work on the end of the list
-    t_stacks: list[list[str]] = [list(reversed(x)) for x in t_stacks]
+    t_stacks = [list(reversed(x)) for x in t_stacks]
 
     # parse through the instructions
     for instruction in instructions:
@@ -256,7 +256,7 @@ def day_5_part_2() -> None:
                 t_stacks[j].append(col[1])
 
     # need to flip around the stacks to work on the end of the list
-    t_stacks: list[list[str]] = [list(reversed(x)) for x in t_stacks]
+    t_stacks = [list(reversed(x)) for x in t_stacks]
 
     # parse through the instructions
     for instruction in instructions:
@@ -296,8 +296,8 @@ def day_6() -> None:
     part_1_index: int = first_unique_substring(stream, 4)
     part_2_index: int = first_unique_substring(stream, 14)
 
-    print(f"The first start of packet marker is at {part_1_index}")
-    print(f"The first start of message marker is at {part_2_index}")
+    print(f"Day 6.1: The first start of packet marker is at {part_1_index}")
+    print(f"Day 6.2: The first start of message marker is at {part_2_index}")
 
 # this class is for day 7
 class Directory:
@@ -322,9 +322,9 @@ def day_7() -> None:
     dir_size_dict: dict[str, int] = {}
 
     # since the commands causally linked, we can just step through them and build a directory tree
-    current_path: str = None
-    current_dir: Directory = None
-    root_dir: Directory = None
+    current_path: str = ""
+    current_dir: Directory
+    root_dir: Directory
     for command in commands:
         match command.split(" "):
             # if we move up, we are 100% done with the folder
@@ -339,7 +339,7 @@ def day_7() -> None:
             # if we go into a new folder, we have to create it in the tree/graph
             case ["$", "cd", folder]:
                 # special case for creating root tree
-                if current_path is not None:
+                if current_path != "":
                     current_path += f"{folder}/"
                     current_dir.children[current_path] = Directory(current_path)
                     current_dir.children[current_path].parent = current_dir
@@ -373,7 +373,7 @@ def day_7() -> None:
                     sub_100000_sum += current_dir.size
         current_dir = current_dir.parent
 
-    print(f"The sum size of all folders smaller than 100000 is {sub_100000_sum}")
+    print(f"Day 7.1: The sum size of all folders smaller than 100000 is {sub_100000_sum}")
 
     # all magic numbers courtesy of the elves
     free_space: int = 70000000 - root_dir.size
@@ -383,7 +383,7 @@ def day_7() -> None:
     deletion_candidates: dict[str, int] = {k:v for k, v in dir_size_dict.items() if v >= space_needed}
     sorted_delection_candidates: dict[str, int] = dict(sorted(deletion_candidates.items(), key=lambda item: item[1]))
     
-    print(f"The smallest directory to be deleted is {list(sorted_delection_candidates.keys())[0]} with size {list(sorted_delection_candidates.values())[0]}")
+    print(f"Day 7.2: The smallest directory to be deleted is {list(sorted_delection_candidates.keys())[0]} with size {list(sorted_delection_candidates.values())[0]}")
 
 def day_8() -> None:
     # our trees
@@ -436,8 +436,8 @@ def day_8() -> None:
     # count the number of visible trees
     visible_trees = sum([sum(x) for x in visible_tree_map])
 
-    print(f'The number of visible trees are {visible_trees}')
-    print(f'The tree with the best score has a score of {best_tree_score}')
+    print(f'Day 8.1: The number of visible trees are {visible_trees}')
+    print(f'Day 8.2: The tree with the best score has a score of {best_tree_score}')
 
 # class for day 9
 class Pos:
@@ -457,7 +457,7 @@ class Pos:
     def pos_delta(self, other) -> tuple[int, int]:
         return other.x - self.x, other.y - self.y
 
-def day_9(knot_num: int) -> None:
+def day_9(knot_num: int, day_indicator: str) -> None:
     # get our steps, for the first time we have a parameter, the number of knots
     # in our rope (including head and tail)
     head_steps = read_to_array('data/day9.txt')
@@ -520,7 +520,7 @@ def day_9(knot_num: int) -> None:
                 iter_knots(knots)
 
     # get our results
-    print(f"The tail covers {len(set(tail_posses))} unique positions with {knot_num} knots")
+    print(f"{day_indicator} The tail covers {len(set(tail_posses))} unique positions with {knot_num} knots")
 
 
 if __name__ == "__main__":
@@ -533,5 +533,5 @@ if __name__ == "__main__":
     day_6()
     day_7()
     day_8()
-    day_9(2)
-    day_9(10)
+    day_9(2, "Day 9.1:")
+    day_9(10, "Day 9.2:")
