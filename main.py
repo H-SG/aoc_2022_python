@@ -1,3 +1,6 @@
+import copy
+from typing import Optional
+
 def read_to_array(path: str, strip: bool = True) -> list[str]:
     with open(path) as f:
         lines: list[str] = f.readlines()
@@ -382,14 +385,14 @@ def day_7() -> None:
     
     print(f"The smallest directory to be deleted is {list(sorted_delection_candidates.keys())[0]} with size {list(sorted_delection_candidates.values())[0]}")
 
-def day_8():
+def day_8() -> None:
     # our trees
     tree_map: list[str] = read_to_array('data/day8.txt')
 
     # the scope of our map
     cols: int = len(tree_map[0])
     rows: int = len(tree_map)
-    best_tree_score: int = None
+    best_tree_score: int = 0
 
     # make a map of trees that are visible
     visible_tree_map: list[list[bool]] = [[False for _ in range(cols)] for _ in range(rows)]
@@ -428,16 +431,97 @@ def day_8():
                     viewing_sub_score *= len(check_direction[1:])
 
             # check if we have a new winrar
-            if best_tree_score is None:
-                best_tree_score = viewing_sub_score
-            else:
-                best_tree_score = max(best_tree_score, viewing_sub_score)
+            best_tree_score = max(best_tree_score, viewing_sub_score)
 
     # count the number of visible trees
     visible_trees = sum([sum(x) for x in visible_tree_map])
 
     print(f'The number of visible trees are {visible_trees}')
     print(f'The tree with the best score has a score of {best_tree_score}')
+
+# class for day 9
+class Pos:
+    def __init__(self, x, y) -> None:
+        self.x: int = x
+        self.y: int = y
+
+    # need this for set
+    def __hash__(self) -> int:
+        return hash(f"{self.x=}, {self.y=}")
+
+    # need this for set
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Pos) and self.x == other.x and self.y == other.y
+    
+    # little helper function for getting the offset of a different point compared to this one
+    def pos_delta(self, other) -> tuple[int, int]:
+        return other.x - self.x, other.y - self.y
+
+def day_9(knot_num: int) -> None:
+    # get our steps, for the first time we have a parameter, the number of knots
+    # in our rope (including head and tail)
+    head_steps = read_to_array('data/day9.txt')
+
+    # make our starting position of knots, and put the tail position in thar
+    knots: list[Pos] = [Pos(0, 0) for _ in range(knot_num)]
+    tail_posses: list[Pos] = [Pos(0, 0)]
+
+    # function which makes the tail move according to the head
+    # technically the while loop is not needed in the current implementation
+    # but for the case of just two knots, it was a useful simplification...
+    # y'know, this could've been a function in the class itself
+    def tail_follow(tail: Pos, head: Pos, log_tail: bool = False) -> None:
+        dx, dy = tail.pos_delta(head)
+        while ((abs(dx) > 1) or (abs(dy) > 1)):
+            if (abs(dx) > 0) and (abs(dy) > 0):
+                if (dx == 1) and (dy == 1):
+                    break
+                tail.y += dy//abs(dy)
+                tail.x += dx//abs(dx)
+            elif abs(dx) > 1:
+                tail.x += dx//abs(dx)
+            elif abs(dy) > 1:
+                tail.y += dy//abs(dy)
+            if log_tail:
+                tail_posses.append(copy.deepcopy(tail))
+            dx, dy = tail.pos_delta(head)
+
+    # helper function for iteration through all knots in a list and updating them
+    # to the knot ahead of it
+    def iter_knots(knots: list[Pos]) -> None:
+        for j, knot in enumerate(knots[1:]):
+                    tail_follow(knot, knots[j])
+
+        tail_posses.append(copy.deepcopy(knots[-1]))
+
+    # step through our steps
+    for step in head_steps:
+        dy: int = 0
+        dx: int = 0
+        match step.split(" "):
+            # in what direction is the head going
+            case ['U', mag]:
+                dy = int(mag)
+            case ['D', mag]:
+                dy = -int(mag)
+            case ['L', mag]:
+                dx = -int(mag)
+            case ['R', mag]:
+                dx = int(mag)
+
+        # update the head iteratively for the multi-knot scenario and all trailing knots
+        if dy != 0:
+            for _ in range(abs(dy)):
+                knots[0].y += dy//abs(dy)
+                iter_knots(knots)
+        if dx != 0:
+            for _ in range(abs(dx)):
+                knots[0].x += dx//abs(dx)
+                iter_knots(knots)
+
+    # get our results
+    print(f"The tail covers {len(set(tail_posses))} unique positions with {knot_num} knots")
+
 
 if __name__ == "__main__":
     day_1()
@@ -449,3 +533,5 @@ if __name__ == "__main__":
     day_6()
     day_7()
     day_8()
+    day_9(2)
+    day_9(10)

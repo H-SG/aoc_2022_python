@@ -42,3 +42,8 @@ Time for some data structures, something which I am not formally familiar with, 
 I thought this was going to be easy, and it almost was if only I didn't swap an x and y around on one line!
 
 I feel like there must be a neat trick to solving this most quickly, but it eludes me.
+
+## Day 9
+This wasn't too bad, though the part 1 only solution did feel more elegant, but ultimately the number of loops remained unchanged (even if one loop now only ever goes through one iteration).
+
+I forgot to do mypy checks for a few days, so a few errors have been fixed, but there is some annoying mypy behaviour I have to sus out and figure what is the best approach...
