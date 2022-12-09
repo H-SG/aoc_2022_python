@@ -165,7 +165,7 @@ def day_4() -> None:
     print(f"Day 4.1: Number of overlapping rosters are {subsets}")
     print(f"Day 4.2: Number of overlapped assignments are {overlapping}")
 
-def day_5_part_1() -> None:
+def day_5() -> None:
     # get our inputs
     raw_inputs: list[str] = read_to_array('data/day5.txt', False)
 
@@ -182,7 +182,7 @@ def day_5_part_1() -> None:
     instructions: list[str] = [x.strip() for x in raw_inputs[split_index + 1:]]
 
     # want to transpose the stacks
-    t_stacks: list[list[str]] = []
+    t_stacks_9000: list[list[str]] = []
 
     # this does the actual transposition
     for i, row in enumerate(stacks):
@@ -194,13 +194,14 @@ def day_5_part_1() -> None:
             if j == 9:
                 continue
             if i == 0:
-                t_stacks.append([])
+                t_stacks_9000.append([])
 
             if col != 'None':
-                t_stacks[j].append(col[1])
+                t_stacks_9000[j].append(col[1])
 
     # need to flip around the stacks to work on the end of the list
-    t_stacks = [list(reversed(x)) for x in t_stacks]
+    t_stacks_9000 = [list(reversed(x)) for x in t_stacks_9000]
+    t_stacks_9001 = copy.deepcopy(t_stacks_9000)
 
     # parse through the instructions
     for instruction in instructions:
@@ -210,71 +211,22 @@ def day_5_part_1() -> None:
         origin: int = int(sub_instructions[3]) - 1
         destination: int = int(sub_instructions[5]) - 1
 
-        # for part 2, we just leave out this little reversed here
-        to_move = list(reversed(t_stacks[origin][-num_move:]))
-        t_stacks[origin] = t_stacks[origin][:-num_move]
-        t_stacks[destination] += to_move
+        # part 1
+        to_move = list(reversed(t_stacks_9000[origin][-num_move:]))
+        t_stacks_9000[origin] = t_stacks_9000[origin][:-num_move]
+        t_stacks_9000[destination] += to_move
+
+        # part 2
+        to_move = t_stacks_9001[origin][-num_move:]
+        t_stacks_9001[origin] = t_stacks_9001[origin][:-num_move]
+        t_stacks_9001[destination] += to_move
 
     # make our top of crate string
-    end_string: str = "".join([x[-1] for x in t_stacks])
+    end_string_9000: str = "".join([x[-1] for x in t_stacks_9000])
+    end_string_9001: str = "".join([x[-1] for x in t_stacks_9001])
 
-    print(f'The top of crates string for part 1 is {end_string}')
-
-def day_5_part_2() -> None:
-    # this is virtually a copy paste of part 1, because lazy
-    # get our inputs
-    raw_inputs: list[str] = read_to_array('data/day5.txt', False)
-
-    # get index of where instructions and data split
-    for i, raw_input in enumerate(raw_inputs):
-        if len(raw_input) == 1:
-            split_index = i
-            break
-    else:
-        raise ValueError
-
-    # our stacks and instructions
-    stacks: list[str] = raw_inputs[:split_index - 1]
-    instructions: list[str] = [x.strip() for x in raw_inputs[split_index + 1:]]
-
-    # want to transpose the stacks
-    t_stacks: list[list[str]] = []
-
-    # this does the actual transposition
-    for i, row in enumerate(stacks):
-        # honestly this is ugly as heck
-        crow: str = row.strip('\n').replace("    ", "None ").replace("]N", "] N").replace("  ", " ")
-        cols: list[str] = [x.strip() for x in crow.split(" ")]
-        for j, col in  enumerate(cols):
-            # 9 is a magic number, sorry
-            if j == 9:
-                continue
-            if i == 0:
-                t_stacks.append([])
-
-            if col != 'None':
-                t_stacks[j].append(col[1])
-
-    # need to flip around the stacks to work on the end of the list
-    t_stacks = [list(reversed(x)) for x in t_stacks]
-
-    # parse through the instructions
-    for instruction in instructions:
-        sub_instructions: list[str] = instruction.split(" ")
-
-        num_move: int = int(sub_instructions[1])
-        origin: int = int(sub_instructions[3]) - 1
-        destination: int = int(sub_instructions[5]) - 1
-
-        # for part 1, we just add in a little reversed here
-        to_move = t_stacks[origin][-num_move:]
-        t_stacks[origin] = t_stacks[origin][:-num_move]
-        t_stacks[destination] += to_move
-
-    # make our top of crate string
-    end_string: str = "".join([x[-1] for x in t_stacks])
-
-    print(f'The top of crates string for part 2 is {end_string}')
+    print(f'Day 5.1: The top of crates string is {end_string_9000}')
+    print(f'Day 5.2: The top of crates string is {end_string_9001}')
 
 def day_6() -> None:
     # our input is one long string
@@ -528,8 +480,7 @@ if __name__ == "__main__":
     day_2()
     day_3()
     day_4()
-    day_5_part_1()
-    day_5_part_2()
+    day_5()
     day_6()
     day_7()
     day_8()
