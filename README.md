@@ -47,3 +47,6 @@ I feel like there must be a neat trick to solving this most quickly, but it elud
 This wasn't too bad, though the part 1 only solution did feel more elegant, but ultimately the number of loops remained unchanged (even if one loop now only ever goes through one iteration).
 
 I forgot to do mypy checks for a few days, so a few errors have been fixed, but there is some annoying mypy behaviour I have to sus out and figure what is the best approach...
+
+## Day 10
+Pseudo assembly and racing the beam! This is my JAM. My use of pattern matching so far has been pleasingly high. I'm truly astounded I had no off by one errors for part 2.

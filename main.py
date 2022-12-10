@@ -1,5 +1,5 @@
 import copy
-from typing import Optional
+import numpy as np
 
 def read_to_array(path: str, strip: bool = True) -> list[str]:
     with open(path) as f:
@@ -474,6 +474,130 @@ def day_9(knot_num: int, day_indicator: str) -> None:
     # get our results
     print(f"{day_indicator} The tail covers {len(set(tail_posses))} unique positions with {knot_num} knots")
 
+def day_10() -> None:
+    # get our instructions
+    instructions = read_to_array('data/day10.txt')
+
+    # cpu state
+    cycle: int = 1
+    X: int = 1
+
+    # part 1 vars
+    sum_strengths: int = 0
+    check_signal: list[int] = [20, 60, 100, 140, 180, 220]
+
+    # part 2 crt
+    crt_screen: list[list[str]] = [['⬛' for _ in range(40)] for _ in range(6)]
+
+    # pixel drawing helper
+    def draw_pixel(cycle: int, x_val: int, crt: list[list[str]]) -> None:
+        # get our current drawing pos
+        ref_cycle: int = cycle - 1
+        cur_row: int = int(np.floor(ref_cycle / 40)) # teechnically should handle wraparound, but yolo
+        cur_col: int = ref_cycle % 40
+
+        # get our valid sprite positions
+        sprite_pos = [x_val - 1, x_val, x_val + 1]
+
+        # if beam is on valid sprite pos, draw
+        if cur_col in sprite_pos:
+            crt[cur_row][cur_col] = '🟦'
+
+    # signal checking helper
+    def check_signal_val(cycle: int) -> int:
+        if cycle in check_signal:
+            return cycle * X
+        return 0            
+
+    # while we have instructions, work through them
+    while (len(instructions) > 0):
+        # pattern matching
+        match instructions[0].split(" "):
+            # order within the cases is quite important
+            case ['noop']:
+                draw_pixel(cycle, X, crt_screen)
+                cycle += 1
+                sum_strengths += check_signal_val(cycle)
+            case ['addx', val]:
+                draw_pixel(cycle, X, crt_screen)
+                cycle += 1
+                sum_strengths += check_signal_val(cycle)
+                draw_pixel(cycle, X, crt_screen)
+                cycle += 1
+                X += int(val)
+                sum_strengths += check_signal_val(cycle)
+
+        # discard previous instruction
+        instructions = instructions[1:]
+
+    # draw results
+    print(f"Day 10.1: The sum of the six signal strengths is {sum_strengths}")
+    print(f"Day 10.2:")
+    for row in crt_screen:
+        print("".join(row))
+
+def day_10() -> None:
+    # get our instructions
+    instructions = read_to_array('data/day10.txt')
+
+    # cpu state
+    cycle: int = 1
+    X: int = 1
+
+    # part 1 vars
+    sum_strengths: int = 0
+    check_signal: list[int] = [20, 60, 100, 140, 180, 220]
+
+    # part 2 crt
+    crt_screen: list[list[str]] = [['⬛' for _ in range(40)] for _ in range(6)]
+
+    # pixel drawing helper
+    def draw_pixel(cycle: int, x_val: int, crt: list[list[str]]) -> None:
+        # get our current drawing pos
+        ref_cycle: int = cycle - 1
+        cur_row: int = int(np.floor(ref_cycle / 40)) # teechnically should handle wraparound, but yolo
+        cur_col: int = ref_cycle % 40
+
+        # get our valid sprite positions
+        sprite_pos = [x_val - 1, x_val, x_val + 1]
+
+        # if beam is on valid sprite pos, draw
+        if cur_col in sprite_pos:
+            crt[cur_row][cur_col] = '🟦'
+
+    # signal checking helper
+    def check_signal_val(cycle: int) -> int:
+        if cycle in check_signal:
+            return cycle * X
+        return 0            
+
+    # while we have instructions, work through them
+    while (len(instructions) > 0):
+        # pattern matching
+        match instructions[0].split(" "):
+            # order within the cases is quite important
+            case ['noop']:
+                draw_pixel(cycle, X, crt_screen)
+                cycle += 1
+                sum_strengths += check_signal_val(cycle)
+            case ['addx', val]:
+                draw_pixel(cycle, X, crt_screen)
+                cycle += 1
+                sum_strengths += check_signal_val(cycle)
+                draw_pixel(cycle, X, crt_screen)
+                cycle += 1
+                X += int(val)
+                sum_strengths += check_signal_val(cycle)
+
+        # discard previous instruction
+        instructions = instructions[1:]
+
+    # draw results
+    print(f"Day 10.1: The sum of the six signal strengths is {sum_strengths}")
+    print(f"Day 10.2:")
+    for row in crt_screen:
+        print("".join(row))
+
 
 if __name__ == "__main__":
     day_1()
@@ -486,3 +610,4 @@ if __name__ == "__main__":
     day_8()
     day_9(2, "Day 9.1:")
     day_9(10, "Day 9.2:")
+    day_10()
