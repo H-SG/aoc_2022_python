@@ -1,5 +1,5 @@
 import copy
-import numpy as np
+import math
 
 def read_to_array(path: str, strip: bool = True) -> list[str]:
     with open(path) as f:
@@ -493,7 +493,7 @@ def day_10() -> None:
     def draw_pixel(cycle: int, x_val: int, crt: list[list[str]]) -> None:
         # get our current drawing pos
         ref_cycle: int = cycle - 1
-        cur_row: int = int(np.floor(ref_cycle / 40))
+        cur_row: int = int(math.floor(ref_cycle / 40))
         cur_row = cur_row % 6
         cur_col: int = ref_cycle % 40
 
