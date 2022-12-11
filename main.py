@@ -537,6 +537,93 @@ def day_10() -> None:
     for row in crt_screen:
         print("".join(row))
 
+# our monkey class
+class Monkeys:
+    def __init__(self) -> None:
+        self.items: list[int]
+        self.operation: str
+        self.test_modulo: int
+        self.true_recip: int
+        self.false_recip: int
+        self.items_inspected = 0
+        self.worry = 3
+    
+    # little helper to inspect an item
+    def inspect_item(self, item: int) -> int:
+        new_val: int = self.do_operation(item)
+        if self.worry == 3:
+            item = math.floor(new_val / self.worry)
+        else:
+            # look at readme for why this works
+            item = new_val % self.worry
+        self.items_inspected += 1
+        return item
+
+    # littler helper to do operation on the item in question
+    def do_operation(self, item: int) -> int:
+        match self.operation.split(" "):
+            case ['+', val]:
+                return item + int(val)
+            case ['*', val]:
+                if val == 'old':
+                    return item * item
+                else:
+                    return item * int(val)
+        raise ValueError
+
+    # little helper to test our item and tell us where to put it
+    def test_item(self, item: int) -> tuple[int, int]:
+        self.items.remove(item)
+        if item % self.test_modulo == 0:
+            return self.true_recip, item
+        else:
+            return self.false_recip, item
+
+def day_11(rounds: int, day_indicator: str, worry: bool = True) -> None:
+    # get our monkeys
+    monkeys_raw = read_to_array('data/day11.txt')
+
+    # make a list of monkeys
+    monkeys_list: list[Monkeys] = []
+
+    # parse the monkey data
+    for monkeys_raw_line in monkeys_raw:
+        match monkeys_raw_line.split(" "):
+            case ['Monkey', *_]:
+                monkeys_list.append(Monkeys())
+            case ['Starting', 'items:', *val]:
+                monkeys_list[-1].items = [int(x.strip(",")) for x in val]
+            case ['Operation:', *val]:
+                ops = val[-2:]
+                monkeys_list[-1].operation = " ".join(ops)
+            case ['Test:', *val]:
+                monkeys_list[-1].test_modulo = int(val[-1])
+            case ['If', 'true:', *val]:
+                monkeys_list[-1].true_recip = int(val[-1])
+            case ['If', 'false:', *val]:
+                monkeys_list[-1].false_recip = int(val[-1])
+
+    # handling for part 1 and 2
+    if not worry:
+        # this is an interesting trick, check readme for more info
+        mod_lcm = math.lcm(*[monkey.test_modulo for monkey in monkeys_list])
+        for monkey in monkeys_list:
+            monkey.worry = mod_lcm
+
+    # go through the rounds!
+    for _ in range(rounds):
+        for i in range(len(monkeys_list)):
+            for _ in range(len(monkeys_list[i].items)):
+                new_worry: int = monkeys_list[i].inspect_item(monkeys_list[i].items[0])
+                monkeys_list[i].items[0] = new_worry
+                new_monkey, new_item = monkeys_list[i].test_item(new_worry)
+                monkeys_list[new_monkey].items.append(new_item)
+        
+    # get our monkey beezknees
+    monkey_business: list[int] = [monkey.items_inspected for monkey in monkeys_list]
+    monkey_business.sort()
+    print(f'{day_indicator} The level of monkey business is {monkey_business[-2] * monkey_business[-1]} after {rounds} rounds')
+
 if __name__ == "__main__":
     day_1()
     day_2()
@@ -549,3 +636,5 @@ if __name__ == "__main__":
     day_9(2, "Day 9.1:")
     day_9(10, "Day 9.2:")
     day_10()
+    day_11(20, "Day 11.1:")
+    day_11(10_000, "Day 11.2", False)

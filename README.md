@@ -50,3 +50,33 @@ I forgot to do mypy checks for a few days, so a few errors have been fixed, but 
 
 ## Day 10
 Pseudo assembly and racing the beam! This is my JAM. My use of pattern matching so far has been pleasingly high. I'm truly astounded I had no off by one errors for part 2.
+
+## Day 11
+Phew! Part 2 came in like a real sucker punch and I should've seen it coming the moment the problem statement said "...find another way to keep your worry levels manageable."
+
+Now, I kinda stumbled on the solution by accident, and it took me a while to figure out why. 
+
+Spoilers, replace the worry level of an item by the modulo result of that worry level and the least common multiple of all the check values from all the monkeys.
+
+If you don't reduce worry level in some way, you're going to run into BIG BigNum issues. My first thought was to divide the worry level by the modulo value if the check passes when the monkey wants to throw. However, this doesn't really happen enough to make a difference, we need to do somemthing else.
+
+Let's consider a trivial example of two monkeys. Their test divisors being 2 and 3 (lcm = 6), and only 1 is ever added to the worry level:
+
+| Original Worry | % 6 (lcm) Remainder | % 2   | % 3   |
+|----------------|---------------------|-------|-------|
+| 1              | 1                   | False | False |
+| 2              | 2                   | True  | False |
+| 3              | 3                   | False | True  |
+| 4              | 4                   | True  | False |
+| 5              | 5                   | False | False |
+| 6              | 0                   | True  | True  |
+| 7              | 1                   | False | False |
+| 8              | 2                   | True  | False |
+| 9              | 3                   | False | True  |
+| 10             | 4                   | True  | False |
+| 11             | 5                   | False | False |
+| 12             | 0                   | True  | True  |
+| 13             | 1                   | False | False |
+| 14             | 2                   | True  | False |
+
+As one can see, the modulo result preserves the behaviour of the common factors modulo on the actual worry, so we can always just replace worry level with the modulo remainder and still get the expected monkey check behaviour.
