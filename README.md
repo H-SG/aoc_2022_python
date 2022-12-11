@@ -80,3 +80,5 @@ Let's consider a trivial example of two monkeys. Their test divisors being 2 and
 | 14             | 2                   | True  | False |
 
 As one can see, the modulo result preserves the behaviour of the common factors modulo on the actual worry, so we can always just replace worry level with the modulo remainder and still get the expected monkey check behaviour.
+
+There may be some nice formal mathermagical explanation for this, but I don't formally know what that might be.
