@@ -803,8 +803,6 @@ def day_12() -> None:
     part_1_path = find_path_length(part_1_map, start_pos, end_pos)
     part_2_path = find_path_length(part_2_map, end_pos, start_pos, True)
 
-    
-
     print(f"Day 12.1: The shortest path to the signal point is {part_1_path}")
     map_visualisation(part_1_map)
     print(f"Day 12.2: The shortest scenic path to the signal point is {part_2_path}")
