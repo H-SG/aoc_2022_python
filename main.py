@@ -1,6 +1,9 @@
 import copy
 import math
 
+# a constant to keep mypy happy for day 12
+BIG_DISTANCE: int = 10_000
+
 def read_to_array(path: str, strip: bool = True) -> list[str]:
     with open(path) as f:
         lines: list[str] = f.readlines()
@@ -12,7 +15,7 @@ def read_to_array(path: str, strip: bool = True) -> list[str]:
         return lines
 
 def read_to_2d_array(path: str) -> list[list[str]]:
-    raw_array: list[int] = read_to_array(path)
+    raw_array: list[str] = read_to_array(path)
 
     return [[y for y in x] for x in raw_array]
 
@@ -629,9 +632,10 @@ def day_11(rounds: int, day_indicator: str, worry: bool = True) -> None:
     monkey_business.sort()
     print(f'{day_indicator} The level of monkey business is {monkey_business[-2] * monkey_business[-1]} after {rounds} rounds')
 
+# class for a map position, a lot of these vars are optional for V I S U A L I S A T I O N
 class MapPoint:
-    def __init__(self, height_code: int, x: int, y: int) -> None:
-        match height_code[0]:
+    def __init__(self, height_code: str, x: int, y: int) -> None:
+        match height_code:
             case 'S':
                 height_char = 'a'
             case 'E':
@@ -639,20 +643,25 @@ class MapPoint:
             case val:
                 height_char = val
 
-        self.height_code = ord(height_char) - ord('a') + 1
-        self.distance_score: int = math.inf
+        self.height_code: int = ord(height_char) - ord('a') + 1
+        self.distance_score: int = BIG_DISTANCE
         self.visited: bool = False
-        self.char: str = height_code[0]
+        self.char: str = height_code
         self.x: int = x
         self.y: int = y
+        self.path_to_here: list[MapPoint] = []
+        self.visit_order: int = BIG_DISTANCE
 
-def day_12():
+def day_12() -> None:
+    # get our inputs, a new function is added to make 2d array of strings
     height_map: list[list[str]] = read_to_2d_array('data/day12.txt')
     
+    # our tasty vars
     map_points: list[list[MapPoint]] = [[] for _ in height_map]
     start_pos: tuple[int, int]
     end_pos: tuple[int, int]
 
+    # parse our raw input into MapPoint
     for y, row in enumerate(height_map):
         for x, pos in enumerate(row):
             map_points[y].append(MapPoint(pos, x, y))
@@ -662,58 +671,97 @@ def day_12():
                 case 'E':
                     end_pos = (x, y)
 
+    # function used for debugging when I was derping
     def print_map(map_points: list[list[MapPoint]]) -> None:
         print('map')
         for row in map_points:
             print("".join([f"\033[94m{x.char}\033[0m" if x.visited else f"{x.char}" for x in row]))
 
+    # this could be done recursively, but sunk cost
+    # this is the closest i could do to what wikipedia says in djikstra's algo
+    # i've always wondered about path finding, and now i know
     def find_path_length(map_points: list[list[MapPoint]], start_pos: tuple[int, int], end_pos: tuple[int, int], shortest_path: bool = False) -> int:
+        # this will come in handy for visualisation later
+        visit_num: int = 0
+        
+        # set out starting position
         map_points[start_pos[1]][start_pos[0]].distance_score = 0
         unvisited_points: dict[MapPoint, int] = {map_points[start_pos[1]][start_pos[0]]: map_points[start_pos[1]][start_pos[0]].distance_score}
+
+        # while our end point is not visited, keep searching
         while (map_points[end_pos[1]][end_pos[0]].visited == False):
-            # print_map(map_points)
+            # if we run out of unvisited points, we can't reach the end point, so escape early
             if len(unvisited_points) == 0:
-                return math.inf
+                return BIG_DISTANCE
+
+            # set our current point and update it's parameters
             current_pos: MapPoint = list(unvisited_points.keys())[0]
-            del unvisited_points[current_pos]
             current_pos.visited = True
-
-            if shortest_path:
-                if current_pos.char == 'a':
-                    return current_pos.distance_score
-
+            current_pos.visit_order = visit_num
             cur_x: int = current_pos.x
             cur_y: int = current_pos.y
+            visit_num += 1
 
+            # remove our current point from the unvisited list, because we are here right now
+            del unvisited_points[current_pos]
+            
+            # special handling for descending to lowest point, here we have no set end_point
+            # merely the first position where we are at height a is valid and break out early
+            if shortest_path:
+                if current_pos.char == 'a':
+                    return current_pos.distance_score            
+
+            # if we are at our end point, we can return early            
             if (cur_x == end_pos[0]) and (cur_y == end_pos[1]):
                 return(current_pos.distance_score)
 
+            # get our list of neighbours, with bounds validation
             next_points: list[tuple[int, int]] = [(max(cur_x - 1, 0), cur_y),
                                                 (min(cur_x + 1, len(map_points[0]) - 1), cur_y),
                                                 (cur_x, max(cur_y - 1, 0)),
                                                 (cur_x, min(cur_y + 1, len(map_points) - 1))]
 
+            # iterate through our neighbours
             for point in next_points:
+                # current neighbour
                 next_pos = map_points[point[1]][point[0]]
 
-                if next_pos.visited == False:
-                    if shortest_path:
-                        if next_pos.height_code - current_pos.height_code >= -1:
-                            next_pos.distance_score = min(next_pos.distance_score, current_pos.distance_score + 1)
-                            unvisited_points[next_pos] = next_pos.distance_score
-                    else:
-                        if next_pos.height_code - current_pos.height_code <= 1:
-                            next_pos.distance_score = min(next_pos.distance_score, current_pos.distance_score + 1)
-                            unvisited_points[next_pos] = next_pos.distance_score
-
+                # if our neighbour has already been visited, we can ignore it
+                if next_pos.visited == True:
+                    continue
+                
+                # special handling for ascending or descending search rules
+                if shortest_path:
+                    # while descending, only consider the neighbour if one lower or higher
+                    if not next_pos.height_code - current_pos.height_code >= -1:
+                        continue
+                else:
+                    # while ascending, only consider the neighbour if less than one higher
+                    if not next_pos.height_code - current_pos.height_code <= 1:
+                        continue
+                
+                # add the distance score and set the unvisited points
+                next_pos.distance_score = min(next_pos.distance_score, current_pos.distance_score + 1)
+                unvisited_points[next_pos] = next_pos.distance_score
+                next_pos.path_to_here = current_pos.path_to_here + [current_pos]
+                
+            # we always want to visit unvisited points in order of shortest path
             unvisited_points = {k: v for k, v in sorted(unvisited_points.items(), key=lambda item: item[1])}
-        return math.inf
+        
+        # last hail mary return which we should never face
+        return BIG_DISTANCE
 
-    part_1_path = find_path_length(copy.deepcopy(map_points), start_pos, end_pos)
-    print(f"The shortest path to the signal point is {part_1_path}")
+    # get our deepcopy maps, cause where we're going shallow copies are king
+    # i do miss explicit pointers/rust syntax here
+    part_1_map = copy.deepcopy(map_points)
+    part_2_map = copy.deepcopy(map_points)
 
-    part_2_path = find_path_length(copy.deepcopy(map_points), end_pos, start_pos, True)
-    print(f"The shortest scenic path to the signal point is {part_2_path}")
+    # our results
+    part_1_path = find_path_length(part_1_map, start_pos, end_pos)
+    part_2_path = find_path_length(part_2_map, end_pos, start_pos, True)
+
+    print(f"Day 12.1: The shortest path to the signal point is {part_1_path}")    
+    print(f"Day 12.2: The shortest scenic path to the signal point is {part_2_path}")
 
 if __name__ == "__main__":
     # day_1()
