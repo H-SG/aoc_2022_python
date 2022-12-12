@@ -1,5 +1,6 @@
 import copy
 import math
+import time
 
 # a constant to keep mypy happy for day 12
 BIG_DISTANCE: int = 10_000
@@ -677,6 +678,48 @@ def day_12() -> None:
         for row in map_points:
             print("".join([f"\033[94m{x.char}\033[0m" if x.visited else f"{x.char}" for x in row]))
 
+    def map_visualisation(map_points: list[list[MapPoint]], last_only: bool = True) -> None:
+        # vars
+        map_visited: list[list[bool]] = [[False for _ in y] for y in map_points]
+        ordered_map_dict: dict[MapPoint, int] = {}
+
+        # make a dict which we can use to get the map points in order that they were parsed
+        for map_row in map_points:
+            for pos in map_row:
+                ordered_map_dict[pos] = pos.visit_order
+
+        
+        # sort that into visit order
+        ordered_map_dict = {k: v for k, v in sorted(ordered_map_dict.items(), key=lambda item: item[1]) if k.visit_order < BIG_DISTANCE}
+
+        positions: list[MapPoint]
+        if last_only:
+            positions = [list(ordered_map_dict.keys())[-1]]
+        else:
+            positions = list(ordered_map_dict.keys())
+
+        for map_pos in positions:
+            path_list: list[MapPoint] = map_pos.path_to_here
+            map_string: str = ""
+            for y, row in enumerate(map_points):
+                row_string: str = ""
+                for x, pos in enumerate(row):
+                    if last_only:
+                        map_visited[y][x] = pos.visited
+                    if map_visited[y][x] and pos not in path_list:
+                        row_string += f"\033[91m{pos.char}\033[0m"
+                    elif pos in path_list:
+                        row_string += f"\033[92m{pos.char}\033[0m"
+                        map_visited[y][x] = True
+                    elif pos == map_pos:
+                        row_string += f"\033[92m{pos.char}\033[0m"
+                        map_visited[y][x] = True
+                    else:
+                        row_string += f"\033[90m{pos.char}\033[0m"
+                map_string += f"{row_string}\n"
+
+        print(map_string[:-1])
+
     # this could be done recursively, but sunk cost
     # this is the closest i could do to what wikipedia says in djikstra's algo
     # i've always wondered about path finding, and now i know
@@ -760,8 +803,12 @@ def day_12() -> None:
     part_1_path = find_path_length(part_1_map, start_pos, end_pos)
     part_2_path = find_path_length(part_2_map, end_pos, start_pos, True)
 
-    print(f"Day 12.1: The shortest path to the signal point is {part_1_path}")    
+    
+
+    print(f"Day 12.1: The shortest path to the signal point is {part_1_path}")
+    map_visualisation(part_1_map)
     print(f"Day 12.2: The shortest scenic path to the signal point is {part_2_path}")
+    map_visualisation(part_2_map)
 
 if __name__ == "__main__":
     # day_1()

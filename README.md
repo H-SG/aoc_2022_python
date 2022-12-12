@@ -82,3 +82,10 @@ Let's consider a trivial example of two monkeys. Their test divisors being 2 and
 As one can see, the modulo result preserves the behaviour of the common factors modulo on the actual worry, so we can always just replace worry level with the modulo remainder and still get the expected monkey check behaviour.
 
 There may be some nice formal mathermagical explanation for this, but I don't formally know what that might be.
+
+## Day 12
+I've always wondered how pathfinding works algorithmically, and now I know for at least Djikstra's method.
+
+For a brief time I was banging my head thinking my puzzle input was not solvable, when I incorrectly assumed I can only ascend or DESCEND by max one height level 🤦.
+
+Today is the first day I feel I could make a neat little visualisation, so I'm going to try that.
