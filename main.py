@@ -11,6 +11,11 @@ def read_to_array(path: str, strip: bool = True) -> list[str]:
     else:
         return lines
 
+def read_to_2d_array(path: str) -> list[list[str]]:
+    raw_array: list[int] = read_to_array(path)
+
+    return [[y for y in x] for x in raw_array]
+
 def day_1() -> None:
     # i'm certain there is a more efficient way of doing this, but
     # this is what came up this morning in my meatbrain
@@ -624,17 +629,104 @@ def day_11(rounds: int, day_indicator: str, worry: bool = True) -> None:
     monkey_business.sort()
     print(f'{day_indicator} The level of monkey business is {monkey_business[-2] * monkey_business[-1]} after {rounds} rounds')
 
+class MapPoint:
+    def __init__(self, height_code: int, x: int, y: int) -> None:
+        match height_code[0]:
+            case 'S':
+                height_char = 'a'
+            case 'E':
+                height_char = 'z'
+            case val:
+                height_char = val
+
+        self.height_code = ord(height_char) - ord('a') + 1
+        self.distance_score: int = math.inf
+        self.visited: bool = False
+        self.char: str = height_code[0]
+        self.x: int = x
+        self.y: int = y
+
+def day_12():
+    height_map: list[list[str]] = read_to_2d_array('data/day12.txt')
+    
+    map_points: list[list[MapPoint]] = [[] for _ in height_map]
+    start_pos: tuple[int, int]
+    end_pos: tuple[int, int]
+
+    for y, row in enumerate(height_map):
+        for x, pos in enumerate(row):
+            map_points[y].append(MapPoint(pos, x, y))
+            match pos:
+                case 'S':
+                    start_pos = (x, y)
+                case 'E':
+                    end_pos = (x, y)
+
+    def print_map(map_points: list[list[MapPoint]]) -> None:
+        print('map')
+        for row in map_points:
+            print("".join([f"\033[94m{x.char}\033[0m" if x.visited else f"{x.char}" for x in row]))
+
+    def find_path_length(map_points: list[list[MapPoint]], start_pos: tuple[int, int], end_pos: tuple[int, int], shortest_path: bool = False) -> int:
+        map_points[start_pos[1]][start_pos[0]].distance_score = 0
+        unvisited_points: dict[MapPoint, int] = {map_points[start_pos[1]][start_pos[0]]: map_points[start_pos[1]][start_pos[0]].distance_score}
+        while (map_points[end_pos[1]][end_pos[0]].visited == False):
+            # print_map(map_points)
+            if len(unvisited_points) == 0:
+                return math.inf
+            current_pos: MapPoint = list(unvisited_points.keys())[0]
+            del unvisited_points[current_pos]
+            current_pos.visited = True
+
+            if shortest_path:
+                if current_pos.char == 'a':
+                    return current_pos.distance_score
+
+            cur_x: int = current_pos.x
+            cur_y: int = current_pos.y
+
+            if (cur_x == end_pos[0]) and (cur_y == end_pos[1]):
+                return(current_pos.distance_score)
+
+            next_points: list[tuple[int, int]] = [(max(cur_x - 1, 0), cur_y),
+                                                (min(cur_x + 1, len(map_points[0]) - 1), cur_y),
+                                                (cur_x, max(cur_y - 1, 0)),
+                                                (cur_x, min(cur_y + 1, len(map_points) - 1))]
+
+            for point in next_points:
+                next_pos = map_points[point[1]][point[0]]
+
+                if next_pos.visited == False:
+                    if shortest_path:
+                        if next_pos.height_code - current_pos.height_code >= -1:
+                            next_pos.distance_score = min(next_pos.distance_score, current_pos.distance_score + 1)
+                            unvisited_points[next_pos] = next_pos.distance_score
+                    else:
+                        if next_pos.height_code - current_pos.height_code <= 1:
+                            next_pos.distance_score = min(next_pos.distance_score, current_pos.distance_score + 1)
+                            unvisited_points[next_pos] = next_pos.distance_score
+
+            unvisited_points = {k: v for k, v in sorted(unvisited_points.items(), key=lambda item: item[1])}
+        return math.inf
+
+    part_1_path = find_path_length(copy.deepcopy(map_points), start_pos, end_pos)
+    print(f"The shortest path to the signal point is {part_1_path}")
+
+    part_2_path = find_path_length(copy.deepcopy(map_points), end_pos, start_pos, True)
+    print(f"The shortest scenic path to the signal point is {part_2_path}")
+
 if __name__ == "__main__":
-    day_1()
-    day_2()
-    day_3()
-    day_4()
-    day_5()
-    day_6()
-    day_7()
-    day_8()
-    day_9(2, "Day 9.1:")
-    day_9(10, "Day 9.2:")
-    day_10()
-    day_11(20, "Day 11.1:")
-    day_11(10_000, "Day 11.2", False)
+    # day_1()
+    # day_2()
+    # day_3()
+    # day_4()
+    # day_5()
+    # day_6()
+    # day_7()
+    # day_8()
+    # day_9(2, "Day 9.1:")
+    # day_9(10, "Day 9.2:")
+    # day_10()
+    # day_11(20, "Day 11.1:")
+    # day_11(10_000, "Day 11.2", False)
+    day_12()
