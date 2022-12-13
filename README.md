@@ -89,3 +89,8 @@ I've always wondered how pathfinding works algorithmically, and now I know for a
 For a brief time I was banging my head thinking my puzzle input was not solvable, when I incorrectly assumed I can only ascend or DESCEND by max one height level 🤦.
 
 Today is the first day I feel I could make a neat little visualisation, so I'm going to try that.
+
+## Day 13
+That wasn't too hard, but I also wouldn't describe it as that interesting.
+
+I guess the trinary recursion result is kinda neat, but really it was just a bit of pain to do today. I guess using `eval` just felt like too much of cop-out, and I was worried how mypy would handle it.

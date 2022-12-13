@@ -1,6 +1,6 @@
 import copy
 import math
-import time
+from typing import Optional
 
 # a constant to keep mypy happy for day 12
 BIG_DISTANCE: int = 10_000
@@ -808,6 +808,88 @@ def day_12() -> None:
     print(f"Day 12.2: The shortest scenic path to the signal point is {part_2_path}")
     map_visualisation(part_2_map)
 
+def day_13() -> None:
+    # get our raw input
+    raw_signals: list[str] = read_to_array('data/day13.txt')
+
+    # list for parsing signal pairs
+    signal_pairs: list[list[list]] = [[]]
+    packets: list[list] = [] # for part 2
+
+    # parse through our raw signals, the use of eval feels... dirty?
+    # i'm so sorry
+    for raw_signal in raw_signals:
+        match raw_signal:
+            case "":
+                signal_pairs.append([])
+            case _:
+                signal_pairs[-1].append(eval(raw_signal))
+                packets.append(eval(raw_signal))
+    
+    # our good packets
+    good_order_indices: list[int] = []
+
+    # function to compare a packet pair RECURSIVELY, it took me a while to grok this out
+    # and to figure out how to handle the none return case nicely, because deep in the 
+    # recursion tree we might not be able to make a definitive decision
+    def compare_pair(left, right) -> Optional[bool]:
+        for l, r in  zip(left, right):
+            if isinstance(l, int) and isinstance(r, int):
+                if l == r:
+                    continue
+                return r > l
+            
+            new_left: list
+            new_right: list
+            if isinstance(l, list) and isinstance(r, list):
+                new_left = l
+                new_right = r
+            else:
+                if isinstance(l, int):
+                    new_left = [l]
+                    new_right = r
+                else:
+                    new_left = l
+                    new_right = [r]
+
+            result = compare_pair(new_left, new_right)
+            if result is not None:
+                return result
+            else:
+                continue
+
+        if len(left) == len(right):
+            # we will only ultimately return none of both packets are identical
+            return None
+        return len(left) < len(right)    
+
+    # work through the signal pairs
+    for i, signal_pair in enumerate(signal_pairs):
+        left_value: list = signal_pair[0]
+        right_value: list = signal_pair[1]
+
+        if compare_pair(left_value, right_value):
+            good_order_indices.append(i + 1)
+
+    print(f"Day 13.1: The sum of the pair indices are {sum(good_order_indices)}")
+
+    start_packet = [[2]]
+    end_packet = [[6]]
+
+    start_index: int = 1
+    end_index: int = 2 # not one since start packet will be inserted before it
+
+    # we don't need to sort the packets, just figure out how many come before 
+    # the respective divider packets
+    for packet in packets:
+        if compare_pair(packet, start_packet):
+            start_index += 1
+
+        if compare_pair(packet, end_packet):
+            end_index += 1
+
+    print(f'Day 13.2: The decoder key is {start_index * end_index}')
+
 if __name__ == "__main__":
     # day_1()
     # day_2()
@@ -822,4 +904,5 @@ if __name__ == "__main__":
     # day_10()
     # day_11(20, "Day 11.1:")
     # day_11(10_000, "Day 11.2", False)
-    day_12()
+    # day_12()
+    day_13()
