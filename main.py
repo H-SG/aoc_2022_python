@@ -896,7 +896,7 @@ class CavePoint:
     def __init__(self, x: int, y: int, type: str = '#'):
         self.x = x
         self.y = y
-        self.type = type
+        self.type = type # keeping this here in case I want to make a visualisation
 
     # need this for set
     def __hash__(self) -> int:
@@ -981,9 +981,11 @@ def day_14() -> None:
                 for x in range(x0, x1 + (dx//abs(dx)), dx//abs(dx)):
                     cave_points.add(CavePoint(x, y0))
 
+    current_sand: CavePoint
+
     # add a grains of sand, move them, until no more grains can be added
     while (True):
-        current_sand: CavePoint = CavePoint(500, 0, 'o')
+        current_sand = CavePoint(500, 0, 'o')
 
         if current_sand.sand_motion(cave_points, deepest_y):
             cave_points.add(copy.deepcopy(current_sand))
@@ -997,7 +999,7 @@ def day_14() -> None:
     deepest_y += 2
 
     while (True):
-        current_sand: CavePoint = CavePoint(500, 0)
+        current_sand = CavePoint(500, 0, 'o')
 
         if current_sand.sand_motion(cave_points, deepest_y, True):
             cave_points.add(copy.deepcopy(current_sand))

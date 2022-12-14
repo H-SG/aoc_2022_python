@@ -93,4 +93,9 @@ Today is the first day I feel I could make a neat little visualisation, so I'm g
 ## Day 13
 That wasn't too hard, but I also wouldn't describe it as that interesting.
 
-I guess the trinary recursion result is kinda neat, but really it was just a bit of pain to do today. I guess using `eval` just felt like too much of cop-out, and I was worried how mypy would handle it.
+I guess the trinary recursion result is kinda neat, but really it was just a bit of pain to do today. Using `eval` just felt like too much of cop-out, and I was worried how mypy would handle it.
+
+## Day 14
+This was a fun one! Easy to fall into a computational trap, but I think this is probably about as efficient as I can make it with this set approach. Some of my colleagues have achieved much better speed with using dicts and tuples as keys, which in hindsight is probably a better approach.
+
+A unique addition for today is itertools. I've not used that library much before, but I guess it's time to get at it and use some of the nice features it has.
