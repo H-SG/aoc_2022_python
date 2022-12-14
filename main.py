@@ -891,104 +891,73 @@ def day_13() -> None:
 
     print(f'Day 13.2: The decoder key is {start_index * end_index}')
 
+# class for day 14
 class CavePoint:
-    def __init__(self, x: int, y: int, type: str):
+    def __init__(self, x: int, y: int, type: str = '#'):
         self.x = x
         self.y = y
         self.type = type
 
     # need this for set
     def __hash__(self) -> int:
-        return hash(f"{self.x=}, {self.y=}, {self.type=}")
+        # thanks to David Fourie for this obvious improvement
+        return hash((self.x, self.y))
 
     # need this for set
     def __eq__(self, other) -> bool:
-        return isinstance(other, CavePoint) and self.x == other.x and self.y == other.y and self.type == other.type
+        return self.x == other.x and self.y == other.y
 
-    def point_directly_below(self, point) -> bool:
-        return self.x == point.x and (self.y + 1) == point.y
-
-    def point_below_left(self, point) -> bool:
-        return (self.x - 1) == point.x and (self.y + 1) == point.y
-
-    def point_below_right(self, point) -> bool:
-        return (self.x + 1) == point.x and (self.y + 1) == point.y
-
+    # function which moves sand until it can move no more
     def sand_motion(self, cave_points: set, deepest_y: int, abyss_floor: bool = False) -> bool:
         # return true if sand stops
-        # return false if sand drops into abyss
-        if self.type != 'sand':
-            raise ValueError('Point is not sand, cannot move')
+        # return false if sand drops into abyss or has not valid path
 
-        while(self.y <= deepest_y):
-            below_point_map: list[bool] = [False, False, False]
-            for c in cave_points:
-                if abyss_floor:
-                    if c.x == self.x and c.y == self.y:
-                        return False
-                if self.point_directly_below(c):
-                    below_point_map[1] = True
-                    if all(below_point_map):
-                        return True                        
-                    continue
+        # check if there are three points directly below, left, and right of the current item
+        # and then move based on that result
+        while (self.y < deepest_y):
+            # if an existing point is at the sand origin, we're finished
+            if self in cave_points:
+                return False
 
-                if self.point_below_left(c):
-                    below_point_map[0] = True
-                    if all(below_point_map):
+            # making these points is time expensive, so only do when absolutely needed
+            direct_bottom_point: CavePoint = CavePoint(self.x, self.y + 1)
+            if direct_bottom_point in cave_points:
+                bottom_left_point: CavePoint = CavePoint(self.x - 1, self.y + 1)
+                if bottom_left_point in cave_points:
+                    bottom_right_point: CavePoint = CavePoint(self.x + 1, self.y + 1)
+                    if bottom_right_point in cave_points:
                         return True
-                    continue
-
-                if self.point_below_right(c):
-                    below_point_map[2] = True
-                    if all(below_point_map):
-                        return True
-                    continue
-            else:
-                if below_point_map[1] == False:
-                    self.y += 1
-                elif  below_point_map[0] == False:
+                    else:
+                        # move right down and test again
+                        self.y += 1
+                        self.x += 1
+                else:
+                    # move left down and test again
                     self.y += 1
                     self.x -= 1
-                else:
-                    self.y += 1
-                    self.x += 1
+            else:
+                # move down and test again
+                self.y += 1
 
-            if abyss_floor:
-                if self.y == deepest_y - 1:
-                    return True
-
-                
-                    
-
-
-            # if any([self.point_directly_below(c) for c in cave_points]):
-            #     if any([self.point_below_left(c) for c in cave_points]):
-            #         if any([self.point_below_right(c) for c in cave_points]):
-            #             return True
-            #         else:
-            #             self.y += 1
-            #             self.x += 1
-            #     else:
-            #         self.y += 1
-            #         self.x -= 1
-            # else:
-            #     self.y += 1
-
-        return False
-
-        
-
-
-
+        # do the special return for abyss floor, essentially adds a virtual floor
+        if abyss_floor:
+            self.y -= 1
+            return True
+        else:
+            return False
 
 def day_14() -> None:
+    # get our rock paths
     raw_rock_paths: list[str] = read_to_array('data/day14.txt')
 
+    # make our set
     cave_points: set[CavePoint] = set()
 
+    # vars for later
     deepest_y: int = 0
-    sand_units_1: int = 0
+    sand_units: int = 0
 
+    # parse the rock paths to make sets
     for raw_rock_path in raw_rock_paths:
         path_route: list[str] = raw_rock_path.split('->')
         
@@ -1007,37 +976,36 @@ def day_14() -> None:
 
             if x0 == x1:
                 for y in range(y0, y1 + (dy//abs(dy)), dy//abs(dy)):
-                    cave_points.add(CavePoint(x0, y, 'rock'))
+                    cave_points.add(CavePoint(x0, y))
             else:
                 for x in range(x0, x1 + (dx//abs(dx)), dx//abs(dx)):
-                    cave_points.add(CavePoint(x, y0, 'rock'))
+                    cave_points.add(CavePoint(x, y0))
 
-    # cave_map = list[list[CavePoint]] = [[]]
-
+    # add a grains of sand, move them, until no more grains can be added
     while (True):
-        current_sand: CavePoint = CavePoint(500, 0, 'sand')
+        current_sand: CavePoint = CavePoint(500, 0, 'o')
 
         if current_sand.sand_motion(cave_points, deepest_y):
             cave_points.add(copy.deepcopy(current_sand))
-            sand_units_1 += 1
+            sand_units += 1
         else:
             break
 
-    print(f"Day 14.1: {sand_units_1} units of sand come to rest before falling the abyss")
-    cave_points_2 = copy.deepcopy(cave_points)
+    print(f"Day 14.1: {sand_units} units of sand come to rest before falling into the abyss")
+    
+    # we can use our previous cave_points as a starting point for the next part
     deepest_y += 2
-    sand_units_2: int = sand_units_1
 
     while (True):
-        current_sand: CavePoint = CavePoint(500, 0, 'sand')
+        current_sand: CavePoint = CavePoint(500, 0)
 
-        if current_sand.sand_motion(cave_points_2, deepest_y, True):
-            cave_points_2.add(copy.deepcopy(current_sand))
-            sand_units_2 += 1
+        if current_sand.sand_motion(cave_points, deepest_y, True):
+            cave_points.add(copy.deepcopy(current_sand))
+            sand_units += 1
         else:
             break
 
-    print(f"Day 14.2: {sand_units_2} units of sand come to rest before falling the abyss")
+    print(f"Day 14.2: {sand_units} units of sand come to rest")
 
 if __name__ == "__main__":
     # day_1()
