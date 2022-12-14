@@ -914,7 +914,7 @@ class CavePoint:
     def point_below_right(self, point) -> bool:
         return (self.x + 1) == point.x and (self.y + 1) == point.y
 
-    def sand_motion(self, cave_points: set, deepest_y: int) -> bool:
+    def sand_motion(self, cave_points: set, deepest_y: int, abyss_floor: bool = False) -> bool:
         # return true if sand stops
         # return false if sand drops into abyss
         if self.type != 'sand':
@@ -923,6 +923,9 @@ class CavePoint:
         while(self.y <= deepest_y):
             below_point_map: list[bool] = [False, False, False]
             for c in cave_points:
+                if abyss_floor:
+                    if c.x == self.x and c.y == self.y:
+                        return False
                 if self.point_directly_below(c):
                     below_point_map[1] = True
                     if all(below_point_map):
@@ -949,6 +952,10 @@ class CavePoint:
                 else:
                     self.y += 1
                     self.x += 1
+
+            if abyss_floor:
+                if self.y == deepest_y - 1:
+                    return True
 
                 
                     
@@ -980,7 +987,7 @@ def day_14() -> None:
     cave_points: set[CavePoint] = set()
 
     deepest_y: int = 0
-    sand_units: int = 0
+    sand_units_1: int = 0
 
     for raw_rock_path in raw_rock_paths:
         path_route: list[str] = raw_rock_path.split('->')
@@ -1005,18 +1012,32 @@ def day_14() -> None:
                 for x in range(x0, x1 + (dx//abs(dx)), dx//abs(dx)):
                     cave_points.add(CavePoint(x, y0, 'rock'))
 
+    # cave_map = list[list[CavePoint]] = [[]]
+
     while (True):
         current_sand: CavePoint = CavePoint(500, 0, 'sand')
 
         if current_sand.sand_motion(cave_points, deepest_y):
             cave_points.add(copy.deepcopy(current_sand))
-            sand_units += 1
+            sand_units_1 += 1
         else:
             break
 
-    print(f"Day 14.1: {sand_units} units of sand come to rest before falling the abyss")
+    print(f"Day 14.1: {sand_units_1} units of sand come to rest before falling the abyss")
+    cave_points_2 = copy.deepcopy(cave_points)
+    deepest_y += 2
+    sand_units_2: int = sand_units_1
 
-    print('wait')
+    while (True):
+        current_sand: CavePoint = CavePoint(500, 0, 'sand')
+
+        if current_sand.sand_motion(cave_points_2, deepest_y, True):
+            cave_points_2.add(copy.deepcopy(current_sand))
+            sand_units_2 += 1
+        else:
+            break
+
+    print(f"Day 14.2: {sand_units_2} units of sand come to rest before falling the abyss")
 
 if __name__ == "__main__":
     # day_1()
