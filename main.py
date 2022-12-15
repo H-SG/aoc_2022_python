@@ -1013,14 +1013,17 @@ def day_14() -> None:
     print(f"Day 14.2: {sand_units} units of sand come to rest")
 
 def day_15() -> None:
+    # get our sensor readings
     raw_sensor_readings: list[str] = read_to_array('data/day15.txt')
 
+    # vars vars vars
     key_row: int = 2_000_000
     key_row_positions: set[tuple[int, int]] = set()
     possible_positions: set[tuple[int, int]] = set()
     beacons: list[tuple[int, int]] = []
     sensors: list[tuple[int, int]]  = []
 
+    # keeping mypy happy
     sensor_x: int
     sensor_y: int
     beacon_x: int
@@ -1029,6 +1032,15 @@ def day_15() -> None:
     dy: int
     dx: int
 
+    # function to say if a point is within the manhattan distance of a sensor beacon pair
+    def in_range(sensor: tuple[int, int], beacon: tuple[int, int], pos: tuple[int, int]) -> bool:
+        distance: int = abs(sensor[0] - beacon[0]) + abs(sensor[1] - beacon[1])
+
+        pos_distance: int = abs(sensor[0] - pos[0]) + abs(sensor[1] - pos[1])
+
+        return pos_distance <= distance
+
+    # parse our raw readings into the two lists
     for sensor_reading in raw_sensor_readings:
         split_reading = sensor_reading.split(" ")
         sensor_x = int(split_reading[2].split("=")[1].strip(','))
@@ -1039,53 +1051,57 @@ def day_15() -> None:
         beacons.append((beacon_x, beacon_y))
         sensors.append((sensor_x, sensor_y))
 
+    # work through each beacon and sensor pair
     for sensor, beacon in zip(sensors, beacons):
         sensor_x, sensor_y = sensor
         beacon_x, beacon_y = beacon
 
+        # our max distance for this pair
         distance = abs(sensor_x - beacon_x) + abs(sensor_y - beacon_y)
 
-        # part 1
+        # for part 1, check if any diamond coverage is within the key row
         if key_row in range(sensor_y - distance, sensor_y + distance + 1):
             dy = int(abs(key_row - sensor_y))
             dx = distance - dy
             for x in range(sensor_x - dx, sensor_x + dx + 1):
                 pos = (x, key_row)
                 if (pos not in sensors) and (pos not in beacons):
+                    # add the position to the key row
                     key_row_positions.add(pos)
 
-        # part 2
+        # for part 2, I'm assuming the only valid location must be just outside all the other diamonds
+        # thus, potential points are the diamond borders which are one length longer
         distance += 1
-        for y in range(sensor_y - distance, sensor_y + distance + 1):
-            dy = int(abs(y - sensor_y))
-            dx = distance - dy
-            possible_positions.add((sensor_x + dx, y))
-            possible_positions.add((sensor_x - dx, y))
-            if len(possible_positions) % 1_000_000 == 0:
-                print(f"{len(possible_positions)} possible positions created")
+
+        # as soon as a possible position is found we don't need to keep searching
+        if len(possible_positions) < 1:
+            # this loops generates the border positions of the +1 size diamond for a given sensor, and then
+            # checks if any of those poistions are not within range of the other sensors
+            # this is still like... 60 million possible positions
+            for y in range(sensor_y - distance, sensor_y + distance + 1):
+                dy = int(abs(y - sensor_y))
+                dx = distance - dy
+                if y < 0:
+                    continue
+                if y > MAX_DISTANCE:
+                    continue
+
+                if ((sensor_x + dx) <= MAX_DISTANCE) and ((sensor_x + dx) >= 0):
+                    if not any([in_range(s, b, (sensor_x + dx, y)) for (s, b) in zip(sensors, beacons)]):
+                        possible_positions.add((sensor_x + dx, y))
+                        break
+
+                if ((sensor_x - dx) <= MAX_DISTANCE) and ((sensor_x - dx) >= 0):
+                    if not any([in_range(s, b, (sensor_x - dx, y)) for (s, b) in zip(sensors, beacons)]):
+                        possible_positions.add((sensor_x - dx, y))
+                        break
 
     print(f"Day 15.1: {len(key_row_positions)} positions cannot contain a beacon")
 
-    for sensor, beacon in zip(sensor, beacons):
-        sensor_x, sensor_y = sensor
-        beacon_x, beacon_y = beacon
+    possible_position_list: list[tuple[int, int]] = list(possible_positions)
+    tuning_frequency: int = possible_position_list[0][0] * 4_000_000 + possible_position_list[0][1]
 
-        distance = abs(sensor_x - beacon_x) + abs(sensor_y - beacon_y)
-
-        for y in range(sensor_y - distance, sensor_y + distance + 1):
-            dy = int(abs(y - sensor_y))
-            dx = distance - dy
-            for x in range(sensor_x - dx, sensor_x + dx):
-                possible_positions.remove((x, y))
-
-
-    print(possible_positions)
-
-    print('wait')
-
-    
-
-
+    print(f"Day 15.2: The tuning frequency is {tuning_frequency}")
 
 if __name__ == "__main__":
     # day_1()

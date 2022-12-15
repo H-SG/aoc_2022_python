@@ -99,3 +99,6 @@ I guess the trinary recursion result is kinda neat, but really it was just a bit
 This was a fun one! Easy to fall into a computational trap, but I think this is probably about as efficient as I can make it with this set approach. Some of my colleagues have achieved much better speed with using dicts and tuples as keys, which in hindsight is probably a better approach.
 
 A unique addition for today is itertools. I've not used that library much before, but I guess it's time to get at it and use some of the nice features it has.
+
+## Day 15
+This was an interesting one, it's taken me a nice long time to figure out a reasonable approach for part 2, and I have something which solves in under two minutes. I do, however, have an idea for fasterer...
