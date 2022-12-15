@@ -1,7 +1,9 @@
 import copy
 import math
+from statistics import mean
 from typing import Optional
-from itertools import pairwise
+from itertools import pairwise, combinations
+from dataclasses import dataclass
 
 # a constant to keep mypy happy for day 12
 BIG_DISTANCE: int = 10_000
@@ -1101,7 +1103,130 @@ def day_15() -> None:
     possible_position_list: list[tuple[int, int]] = list(possible_positions)
     tuning_frequency: int = possible_position_list[0][0] * 4_000_000 + possible_position_list[0][1]
 
+    print(possible_positions)
     print(f"Day 15.2: The tuning frequency is {tuning_frequency}")
+
+@dataclass
+class SensorPairs:
+    sx: int
+    sy: int
+    bx: int
+    by: int
+
+    def __post_init__(self):
+        self.d = abs(self.sx - self.bx) + abs(self.sy - self.by)
+
+    def in_range(self, other: tuple[int, int]) -> bool:
+        other_distance: int = abs(self.sx - other[0]) + abs(self.sy - other[1])
+        return other_distance <= self.d
+
+def day_15_fast():
+    # i may be presumptious in calling this one fast
+    raw_sensor_readings: list[str] = read_to_array('data/day15.txt')
+
+    # vars vars vars
+    key_row: int = 2_000_000
+    key_row_positions: set[tuple[int, int]] = set()
+    sensor_pairs: list[SensorPairs] = []
+
+    # keeping mypy happy
+    sensor_x: int
+    sensor_y: int
+    beacon_x: int
+    beacon_y: int
+    dy: int
+    dx: int
+
+    # parse our raw readings into the two lists
+    for sensor_reading in raw_sensor_readings:
+        split_reading = sensor_reading.split(" ")
+        sensor_x = int(split_reading[2].split("=")[1].strip(','))
+        sensor_y = int(split_reading[3].split("=")[1].strip(":"))
+        beacon_x = int(split_reading[-2].split("=")[1].strip(','))
+        beacon_y = int(split_reading[-1].split("=")[1])
+
+        sensor_pairs.append(SensorPairs(sensor_x, sensor_y, beacon_x, beacon_y))
+
+        # part 1 we can do right here
+        if key_row in range(sensor_y - sensor_pairs[-1].d, sensor_y + sensor_pairs[-1].d + 1):
+            dy = abs(key_row - sensor_y)
+            dx = sensor_pairs[-1].d - dy
+            for x in range(sensor_x - dx, sensor_x + dx):
+                key_row_positions.add((x, key_row))
+
+    print(f"Day 15.1: {len(key_row_positions)} positions cannot contain a beacon")
+
+    # part 2 i hope we can do with itertools and some clever thinking
+    for four_pairs in combinations(sensor_pairs, 4):
+        overlaps: int = 0
+        one_gaps: int = 0
+        for two_pairs in combinations(four_pairs, 2):
+            bsd0 = two_pairs[0]
+            bsd1 = two_pairs[1]
+
+            max_distance: int = bsd0.d + bsd1.d + 1
+            actual_distance: int = abs(bsd0.sx - bsd1.sx) + abs(bsd0.sy - bsd1.sy)
+
+            if actual_distance <= max_distance:
+                overlaps += 1
+
+            if actual_distance == max_distance + 1:
+                one_gaps += 1
+        
+        if overlaps == 4 and one_gaps == 2:        
+            x_list: list[int] = [x.sx for x in four_pairs]
+            y_list: list[int] = [x.sy for x in four_pairs]
+            distance_list: list[int] = [x.d for x in four_pairs]
+            x_list.sort()
+            y_list.sort()
+            distance_list.sort()
+
+            smallest_diamond: SensorPairs = [x for x in four_pairs if x.d == distance_list[0]][0]
+
+            x_max: int = x_list[2]
+            y_max: int = y_list[2]
+
+            check_top: bool = True
+            check_bottom: bool = True
+            check_left: bool = True
+            check_right: bool = True
+
+            if smallest_diamond.sy <= y_max:
+                check_top = False             
+            else:
+                check_bottom = False
+                
+            if smallest_diamond.sx <= x_max:
+                check_left = False
+            else:
+                check_right = False
+
+            y_range: tuple[int] = [smallest_diamond.sy - (smallest_diamond.d + 2), smallest_diamond.sy + (smallest_diamond.d + 2)]
+
+            if check_top == False:
+                y_range[0] = smallest_diamond.sy
+            elif check_bottom == False:
+                y_range[1] = smallest_diamond.sy
+
+            for y in range(*y_range):
+                dy = abs(y - smallest_diamond.sy)
+                dx = (smallest_diamond.d + 1) - dy
+
+                if y == 2601918:
+                    pass
+
+                if check_left:
+                    if not any(p.in_range((smallest_diamond.sx - dx, y)) for p in four_pairs):
+                        print(f"Day 15.2: The tuning frequency is {(smallest_diamond.sx - dx) * 4_000_000 + y}")
+                        break
+
+                if check_right:
+                    if not any(p.in_range((smallest_diamond.sx + dx, y)) for p in four_pairs):
+                        print(f"Day 15.2: The tuning frequency is {(smallest_diamond.sx + dx) * 4_000_000 + y}")
+                        break
+            else:
+                continue
+            break
 
 if __name__ == "__main__":
     # day_1()
@@ -1120,4 +1245,5 @@ if __name__ == "__main__":
     # day_12()
     # day_13()
     # day_14()
-    day_15()
+    # day_15()
+    day_15_fast()
