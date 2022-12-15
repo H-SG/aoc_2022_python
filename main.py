@@ -6,6 +6,9 @@ from itertools import pairwise
 # a constant to keep mypy happy for day 12
 BIG_DISTANCE: int = 10_000
 
+# constant for day 15
+MAX_DISTANCE: int = 4_000_000
+
 def read_to_array(path: str, strip: bool = True) -> list[str]:
     with open(path) as f:
         lines: list[str] = f.readlines()
@@ -1009,6 +1012,81 @@ def day_14() -> None:
 
     print(f"Day 14.2: {sand_units} units of sand come to rest")
 
+def day_15() -> None:
+    raw_sensor_readings: list[str] = read_to_array('data/day15.txt')
+
+    key_row: int = 2_000_000
+    key_row_positions: set[tuple[int, int]] = set()
+    possible_positions: set[tuple[int, int]] = set()
+    beacons: list[tuple[int, int]] = []
+    sensors: list[tuple[int, int]]  = []
+
+    sensor_x: int
+    sensor_y: int
+    beacon_x: int
+    beacon_y: int
+    distance: int
+    dy: int
+    dx: int
+
+    for sensor_reading in raw_sensor_readings:
+        split_reading = sensor_reading.split(" ")
+        sensor_x = int(split_reading[2].split("=")[1].strip(','))
+        sensor_y = int(split_reading[3].split("=")[1].strip(":"))
+        beacon_x = int(split_reading[-2].split("=")[1].strip(','))
+        beacon_y = int(split_reading[-1].split("=")[1])
+
+        beacons.append((beacon_x, beacon_y))
+        sensors.append((sensor_x, sensor_y))
+
+    for sensor, beacon in zip(sensors, beacons):
+        sensor_x, sensor_y = sensor
+        beacon_x, beacon_y = beacon
+
+        distance = abs(sensor_x - beacon_x) + abs(sensor_y - beacon_y)
+
+        # part 1
+        if key_row in range(sensor_y - distance, sensor_y + distance + 1):
+            dy = int(abs(key_row - sensor_y))
+            dx = distance - dy
+            for x in range(sensor_x - dx, sensor_x + dx + 1):
+                pos = (x, key_row)
+                if (pos not in sensors) and (pos not in beacons):
+                    key_row_positions.add(pos)
+
+        # part 2
+        distance += 1
+        for y in range(sensor_y - distance, sensor_y + distance + 1):
+            dy = int(abs(y - sensor_y))
+            dx = distance - dy
+            possible_positions.add((sensor_x + dx, y))
+            possible_positions.add((sensor_x - dx, y))
+            if len(possible_positions) % 1_000_000 == 0:
+                print(f"{len(possible_positions)} possible positions created")
+
+    print(f"Day 15.1: {len(key_row_positions)} positions cannot contain a beacon")
+
+    for sensor, beacon in zip(sensor, beacons):
+        sensor_x, sensor_y = sensor
+        beacon_x, beacon_y = beacon
+
+        distance = abs(sensor_x - beacon_x) + abs(sensor_y - beacon_y)
+
+        for y in range(sensor_y - distance, sensor_y + distance + 1):
+            dy = int(abs(y - sensor_y))
+            dx = distance - dy
+            for x in range(sensor_x - dx, sensor_x + dx):
+                possible_positions.remove((x, y))
+
+
+    print(possible_positions)
+
+    print('wait')
+
+    
+
+
+
 if __name__ == "__main__":
     # day_1()
     # day_2()
@@ -1025,4 +1103,5 @@ if __name__ == "__main__":
     # day_11(10_000, "Day 11.2", False)
     # day_12()
     # day_13()
-    day_14()
+    # day_14()
+    day_15()
