@@ -102,3 +102,5 @@ A unique addition for today is itertools. I've not used that library much before
 
 ## Day 15
 This was an interesting one, it's taken me a nice long time to figure out a reasonable approach for part 2, and I have something which solves in under two minutes. I do, however, have an idea for fasterer...
+
+Spoilers: I got it a lot faster. I was inspired by seeing the visualisation [here](https://old.reddit.com/r/adventofcode/comments/zmfab4/2022_day_15_sensor_scanning_for_beacons/) from reddit. Basically it showed me that the point of interest will always be bound by four sensor diamonds, and finding those sensor diamonds is a case of a unique set of conditions that occurs with, and only with, the correct combination of four sensors. 

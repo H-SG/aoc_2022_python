@@ -1014,98 +1014,7 @@ def day_14() -> None:
 
     print(f"Day 14.2: {sand_units} units of sand come to rest")
 
-def day_15() -> None:
-    # get our sensor readings
-    raw_sensor_readings: list[str] = read_to_array('data/day15.txt')
-
-    # vars vars vars
-    key_row: int = 2_000_000
-    key_row_positions: set[tuple[int, int]] = set()
-    possible_positions: set[tuple[int, int]] = set()
-    beacons: list[tuple[int, int]] = []
-    sensors: list[tuple[int, int]]  = []
-
-    # keeping mypy happy
-    sensor_x: int
-    sensor_y: int
-    beacon_x: int
-    beacon_y: int
-    distance: int
-    dy: int
-    dx: int
-
-    # function to say if a point is within the manhattan distance of a sensor beacon pair
-    def in_range(sensor: tuple[int, int], beacon: tuple[int, int], pos: tuple[int, int]) -> bool:
-        distance: int = abs(sensor[0] - beacon[0]) + abs(sensor[1] - beacon[1])
-
-        pos_distance: int = abs(sensor[0] - pos[0]) + abs(sensor[1] - pos[1])
-
-        return pos_distance <= distance
-
-    # parse our raw readings into the two lists
-    for sensor_reading in raw_sensor_readings:
-        split_reading = sensor_reading.split(" ")
-        sensor_x = int(split_reading[2].split("=")[1].strip(','))
-        sensor_y = int(split_reading[3].split("=")[1].strip(":"))
-        beacon_x = int(split_reading[-2].split("=")[1].strip(','))
-        beacon_y = int(split_reading[-1].split("=")[1])
-
-        beacons.append((beacon_x, beacon_y))
-        sensors.append((sensor_x, sensor_y))
-
-    # work through each beacon and sensor pair
-    for sensor, beacon in zip(sensors, beacons):
-        sensor_x, sensor_y = sensor
-        beacon_x, beacon_y = beacon
-
-        # our max distance for this pair
-        distance = abs(sensor_x - beacon_x) + abs(sensor_y - beacon_y)
-
-        # for part 1, check if any diamond coverage is within the key row
-        if key_row in range(sensor_y - distance, sensor_y + distance + 1):
-            dy = int(abs(key_row - sensor_y))
-            dx = distance - dy
-            for x in range(sensor_x - dx, sensor_x + dx + 1):
-                pos = (x, key_row)
-                if (pos not in sensors) and (pos not in beacons):
-                    # add the position to the key row
-                    key_row_positions.add(pos)
-
-        # for part 2, I'm assuming the only valid location must be just outside all the other diamonds
-        # thus, potential points are the diamond borders which are one length longer
-        distance += 1
-
-        # as soon as a possible position is found we don't need to keep searching
-        if len(possible_positions) < 1:
-            # this loops generates the border positions of the +1 size diamond for a given sensor, and then
-            # checks if any of those poistions are not within range of the other sensors
-            # this is still like... 60 million possible positions
-            for y in range(sensor_y - distance, sensor_y + distance + 1):
-                dy = int(abs(y - sensor_y))
-                dx = distance - dy
-                if y < 0:
-                    continue
-                if y > MAX_DISTANCE:
-                    continue
-
-                if ((sensor_x + dx) <= MAX_DISTANCE) and ((sensor_x + dx) >= 0):
-                    if not any([in_range(s, b, (sensor_x + dx, y)) for (s, b) in zip(sensors, beacons)]):
-                        possible_positions.add((sensor_x + dx, y))
-                        break
-
-                if ((sensor_x - dx) <= MAX_DISTANCE) and ((sensor_x - dx) >= 0):
-                    if not any([in_range(s, b, (sensor_x - dx, y)) for (s, b) in zip(sensors, beacons)]):
-                        possible_positions.add((sensor_x - dx, y))
-                        break
-
-    print(f"Day 15.1: {len(key_row_positions)} positions cannot contain a beacon")
-
-    possible_position_list: list[tuple[int, int]] = list(possible_positions)
-    tuning_frequency: int = possible_position_list[0][0] * 4_000_000 + possible_position_list[0][1]
-
-    print(possible_positions)
-    print(f"Day 15.2: The tuning frequency is {tuning_frequency}")
-
+# created a dataclass for the fast solution to day 15
 @dataclass
 class SensorPairs:
     sx: int
@@ -1113,20 +1022,26 @@ class SensorPairs:
     bx: int
     by: int
 
+    # post init is a handy thing for dataclasses
     def __post_init__(self):
         self.d = abs(self.sx - self.bx) + abs(self.sy - self.by)
 
+    # checks if an arbitrary point is within the scan area of this sensor pair
     def in_range(self, other: tuple[int, int]) -> bool:
         other_distance: int = abs(self.sx - other[0]) + abs(self.sy - other[1])
         return other_distance <= self.d
 
-def day_15_fast():
+    # checks if an arbitrary point is outside the scan area of this sensor pair
+    def out_range(self, other: tuple[int, int]) -> bool:
+        other_distance: int = abs(self.sx - other[0]) + abs(self.sy - other[1])
+        return self.d < other_distance
+
+def day_15() -> None:
     # i may be presumptious in calling this one fast
     raw_sensor_readings: list[str] = read_to_array('data/day15.txt')
 
     # vars vars vars
     key_row: int = 2_000_000
-    key_row_positions: set[tuple[int, int]] = set()
     sensor_pairs: list[SensorPairs] = []
 
     # keeping mypy happy
@@ -1134,8 +1049,13 @@ def day_15_fast():
     sensor_y: int
     beacon_x: int
     beacon_y: int
+    beacon_set: set[int] = set()
     dy: int
     dx: int
+
+    # how much of x in the key_row have we already covered
+    x_ranges: list[list[int]] = []
+    final_x_ranges: list[list[int]] = []
 
     # parse our raw readings into the two lists
     for sensor_reading in raw_sensor_readings:
@@ -1146,17 +1066,54 @@ def day_15_fast():
         beacon_y = int(split_reading[-1].split("=")[1])
 
         sensor_pairs.append(SensorPairs(sensor_x, sensor_y, beacon_x, beacon_y))
+        
+        # a tool to help us later
+        if beacon_y == key_row:
+            beacon_set.add(beacon_x)
 
-        # part 1 we can do right here
+        # part 1 we can do right here by logging the ranges of x in the key row covered
         if key_row in range(sensor_y - sensor_pairs[-1].d, sensor_y + sensor_pairs[-1].d + 1):
             dy = abs(key_row - sensor_y)
             dx = sensor_pairs[-1].d - dy
-            for x in range(sensor_x - dx, sensor_x + dx):
-                key_row_positions.add((x, key_row))
+            x0: int = sensor_x - dx
+            x1: int = sensor_x + dx
+            x_ranges.append([x0, x1])
 
-    print(f"Day 15.1: {len(key_row_positions)} positions cannot contain a beacon")
+    # now to collapse all the ranges into a single one as per overlaps and borders
+    final_x_ranges.append(list(x_ranges.pop(0)))
+    while(len(x_ranges) > 0):
+        x_range: list[int] = x_ranges.pop(0)
+
+        for final_x_range in final_x_ranges:
+            if x_range[0] in range(final_x_range[0], final_x_range[1] + 2):
+                final_x_range[1] = max(x_range[1], final_x_range[1])
+                break
+
+            if x_range[1] in range(final_x_range[0] - 1, final_x_range[1] + 1):
+                final_x_range[0] = min(x_range[0], final_x_range[0])
+                break
+        else:
+            final_x_ranges.append(list(x_range))
+
+        # i'm taking a risk and assuming all the ranges eventually overlap
+        if len(x_ranges) == 0:
+            if len(final_x_ranges) == 1:
+                break
+            x_ranges = copy.deepcopy(final_x_ranges)
+            final_x_ranges = [x_ranges.pop(0)]
+
+    key_row_positions: int = (final_x_ranges[0][1] - final_x_ranges[0][0]) + 1
+
+    for bx in beacon_set:
+        if bx in range(final_x_ranges[0][0], final_x_ranges[0][1]):
+            key_row_positions -= 1
+
+    print(f"Day 15.1: {key_row_positions} positions cannot contain a beacon")
 
     # part 2 i hope we can do with itertools and some clever thinking
+    # basically, we're looking for a combination of four diamonds
+    # between them there should be 4 instances of overlapping or touching and 
+    # 2 instances of gaps exactly 1 in size
     for four_pairs in combinations(sensor_pairs, 4):
         overlaps: int = 0
         one_gaps: int = 0
@@ -1173,7 +1130,9 @@ def day_15_fast():
             if actual_distance == max_distance + 1:
                 one_gaps += 1
         
-        if overlaps == 4 and one_gaps == 2:        
+        if overlaps == 4 and one_gaps == 2:
+            # we have our pair of four diamonds, now we want to get the smallest one and it's relative
+            # position to the rest
             x_list: list[int] = [x.sx for x in four_pairs]
             y_list: list[int] = [x.sy for x in four_pairs]
             distance_list: list[int] = [x.d for x in four_pairs]
@@ -1181,49 +1140,45 @@ def day_15_fast():
             y_list.sort()
             distance_list.sort()
 
+            # we want the smallest, since that will be the fewest potential search iterations
             smallest_diamond: SensorPairs = [x for x in four_pairs if x.d == distance_list[0]][0]
 
             x_max: int = x_list[2]
             y_max: int = y_list[2]
 
+            # we only need to check the border of one side of the smallest diamond, that which
+            # is facing the potential beacon
             check_top: bool = True
-            check_bottom: bool = True
             check_left: bool = True
-            check_right: bool = True
 
             if smallest_diamond.sy <= y_max:
                 check_top = False             
-            else:
-                check_bottom = False
                 
             if smallest_diamond.sx <= x_max:
                 check_left = False
-            else:
-                check_right = False
 
-            y_range: tuple[int] = [smallest_diamond.sy - (smallest_diamond.d + 2), smallest_diamond.sy + (smallest_diamond.d + 2)]
+            # set our y search range + 1 to get the outer border of the diamond
+            # any new beacon must lie just beyond the border of existing diamonds
+            y_range: list[int] = [smallest_diamond.sy - (smallest_diamond.d + 2), smallest_diamond.sy + (smallest_diamond.d + 2)]
 
             if check_top == False:
                 y_range[0] = smallest_diamond.sy
-            elif check_bottom == False:
+            else:
                 y_range[1] = smallest_diamond.sy
 
             for y in range(*y_range):
                 dy = abs(y - smallest_diamond.sy)
                 dx = (smallest_diamond.d + 1) - dy
 
-                if y == 2601918:
-                    pass
-
+                # check the one valid edge for a point which is not in any of the other three diamonds
                 if check_left:
-                    if not any(p.in_range((smallest_diamond.sx - dx, y)) for p in four_pairs):
+                    if all(p.out_range((smallest_diamond.sx - dx, y)) for p in four_pairs):
                         print(f"Day 15.2: The tuning frequency is {(smallest_diamond.sx - dx) * 4_000_000 + y}")
                         break
-
-                if check_right:
-                    if not any(p.in_range((smallest_diamond.sx + dx, y)) for p in four_pairs):
+                else:
+                    if all(p.out_range((smallest_diamond.sx + dx, y)) for p in four_pairs):
                         print(f"Day 15.2: The tuning frequency is {(smallest_diamond.sx + dx) * 4_000_000 + y}")
-                        break
+                        break                    
             else:
                 continue
             break
@@ -1245,5 +1200,4 @@ if __name__ == "__main__":
     # day_12()
     # day_13()
     # day_14()
-    # day_15()
-    day_15_fast()
+    day_15()
